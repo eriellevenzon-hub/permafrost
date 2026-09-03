@@ -68,5 +68,3 @@ before you edit:
   That costs a little contrast as a flake crosses a line of text —
   14.2:1 down to about 10.7:1. `z-index: 0` puts it behind the cards
   and is the one-line revert.
-# permafrost
-# permafrost

@@ -1,0 +1,25 @@
+# Netlify reads this instead of the dashboard settings, so the build is
+# the same whoever triggers it and however the site was first connected.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  # match the Node the site is developed against
+  NODE_VERSION = "20"
+
+# The illustrations never change without their filename changing, so they
+# can be cached hard. Everything else Netlify fingerprints itself.
+[[headers]]
+  for = "/illustrations/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Routing is done with a hash (#/term/buffer-lane), which never reaches
+# the server, so no SPA redirect rule is needed. A stray deep path should
+# just land on the archive rather than a 404 page.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
