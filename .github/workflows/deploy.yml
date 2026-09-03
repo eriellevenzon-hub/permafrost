@@ -1,0 +1,52 @@
+name: Deploy the Permafrost
+
+on:
+  push:
+    branches: [main]
+  # so you can republish without a commit
+  workflow_dispatch:
+
+# what Pages needs: read the repo, write the deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# one deploy at a time; a queued run supersedes a waiting one but never
+# cancels a deploy already in flight
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      # Pages serves the artifact as-is, and Jekyll would otherwise skip
+      # any file or folder beginning with an underscore
+      - run: touch dist/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
