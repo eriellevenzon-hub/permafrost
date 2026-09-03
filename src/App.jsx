@@ -797,11 +797,11 @@ html { scroll-behavior: smooth; }
    as decoration. */
 .btn {
   display: inline-flex; align-items: center; gap: 7px;
-  height: 32px; padding: 0 13px;
-  font-family: var(--sans); font-size: 11px; font-weight: 700;
-  letter-spacing: 0.06em;
+  padding: 8px 10px 6px;
+  font-family: var(--sans); font-size: 9px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; line-height: 1;
   color: var(--field, var(--accent));
-  background: var(--card);
+  background: transparent;
   border: 1.5px solid var(--field, var(--accent));
   border-radius: 20px;
   cursor: pointer;
@@ -814,15 +814,12 @@ html { scroll-behavior: smooth; }
 .btn:hover {
   color: var(--paper);
   border-color: var(--field, var(--accent));
-  transform: translateY(-2px);
   background: var(--field, var(--accent));
-  -webkit-backdrop-filter: blur(var(--frost-blur)) saturate(180%);
-  backdrop-filter: blur(var(--frost-blur)) saturate(180%);
-  box-shadow:
-    inset 0 1px 0 var(--frost-edge),
-    0 4px 12px -4px rgba(31, 44, 58, 0.22);
+  /* the plugin just fills. The frosted lift it replaced drew a white
+     inset line across the top of every chip. */
+  box-shadow: none;
 }
-.btn:active { transform: scale(0.975); }
+.btn:active { transform: scale(0.97); transition-duration: 90ms; }
 
 .btn-quiet {
   color: var(--ink3);
@@ -925,13 +922,18 @@ html { scroll-behavior: smooth; }
    with overflow: hidden reads as a cropped disc sweeping through —
    the frosted panel is the whole hover here. */
 .index-item .rp-wash { display: none; }
-.index-item[aria-current="true"] { color: var(--accent); font-weight: 500; }
+.index-item[aria-current="true"] {
+  color: var(--nav-field, var(--accent));
+  font-weight: 500;
+  transition: color var(--t-enter) var(--soft);
+}
 .index-item::before {
   content: ""; position: absolute; left: var(--rail-lead); top: 50%;
-  height: 0; width: 2px; background: var(--accent);
+  height: 0; width: 2px; background: var(--nav-field, var(--accent));
   transform: translateY(-50%);
   transition:
     height var(--t-enter) var(--ease),
+    background var(--t-enter) var(--soft),
     opacity var(--t-micro) var(--soft);
   z-index: 2;
 }
@@ -1043,14 +1045,15 @@ html { scroll-behavior: smooth; }
 
 /* The pill itself keeps its shape; the padding goes on a wrapper, so
    the filled surface is unchanged and only its position shifts. */
-.aud-wrap { display: inline-flex; padding-top: 3px; padding-bottom: 2px; }
+.aud-wrap { display: inline-flex; padding-top: 2px; }
 
 .aud {
-  font-size: 9px; font-weight: 800;
+  display: inline-block;
+  font-size: 8.5px; font-weight: 800;
   letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--field);
   background: color-mix(in srgb, var(--field) 12%, #FFFFFF);
-  border-radius: 20px; padding: 6px 10px 4px; white-space: nowrap; line-height: 1;
+  border-radius: 20px; padding: 5px 9px 4px; white-space: nowrap; line-height: 1;
   transition: background var(--t-micro) var(--soft), color var(--t-micro) var(--soft);
 }
 .card.is-open .aud { background: var(--field); color: var(--paper); }
@@ -1099,12 +1102,14 @@ html { scroll-behavior: smooth; }
 
 /* the same pill the panel puts above this paragraph */
 .chip-label {
-  display: inline-block; margin: 0 0 10px;
+  display: inline-block; margin: 0 0 10px -2px;
   background: color-mix(in srgb, var(--field) 12%, #FFFFFF);
   color: var(--field);
-  font-size: 9px; font-weight: 800; letter-spacing: 0.14em;
-  text-transform: uppercase; padding: 6px 10px 4px; border-radius: 20px;
-  margin-left: -2px;
+  font-size: 8.5px; font-weight: 800; letter-spacing: 0.14em;
+  text-transform: uppercase; padding: 6px 9px 4px; border-radius: 20px;
+  /* without this it inherits the page's 27px line-height and the pill
+     grows a band of empty space above the text - the "white line" */
+  line-height: 1;
 }
 .long { margin: 0; padding-left: 2px; font-size: 17px; line-height: 27px; color: var(--ink2); }
 
@@ -1666,6 +1671,9 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("everything");
   const [open, setOpen] = useState(null); // one card at a time
+  const openRef = useRef(null);
+  openRef.current = open;
+  const navFieldRef = useRef(null);
   const [current, setCurrent] = useState(null);
   const [indexOpen, setIndexOpen] = useState(false);
   const [lifted, setLifted] = useState(false);
@@ -1709,6 +1717,51 @@ export default function App() {
       })).filter((g) => g.entries.length > 0),
     [visible]
   );
+
+  /* One place decides the colour: whichever entry is highlighted in the
+     index. The bar, the mark, the active filter and the index marker all
+     read it, so they cannot drift apart. */
+  /* One place decides the bar's colour, in this order:
+       an open card, while any part of it is still on screen;
+       otherwise whatever the index has highlighted.
+     Reading the same measurements the highlight uses means the two can
+     never disagree, and no extra observer runs per frame. */
+  const setNavField = useCallback((slug) => {
+    const entry = BY_SLUG.get(slug);
+    if (!entry || navFieldRef.current === slug) return;
+    const root = document.querySelector(".pf");
+    if (!root) return;
+    navFieldRef.current = slug;
+    root.style.setProperty("--nav-field", fieldOf(entry));
+  }, []);
+
+  const resolveNavField = useCallback(
+    (highlighted, y, line) => {
+      const openSlug = openRef.current;
+      if (openSlug) {
+        const box = tops.current.find((t) => t.slug === openSlug);
+        /* still on screen: its foot is below the bar and its head is
+           above the fold */
+        const onScreen =
+          box &&
+          box.bottom - y > line &&
+          box.top - y < (window.innerHeight || 0);
+        if (onScreen) {
+          setNavField(openSlug);
+          return;
+        }
+      }
+      if (highlighted) setNavField(highlighted);
+    },
+    [setNavField]
+  );
+
+  /* opening a card recolours straight away rather than waiting for the
+     next scroll frame; closing it hands the colour back to the index */
+  useEffect(() => {
+    if (open) setNavField(open);
+    else if (currentRef.current) setNavField(currentRef.current);
+  }, [open, setNavField]);
 
   const flat = useMemo(() => groups.flatMap((g) => g.entries), [groups]);
   flatRef.current = flat;
@@ -1775,14 +1828,10 @@ export default function App() {
         if (found && found !== currentRef.current) {
           currentRef.current = found;
           setCurrent(found);
-
-          /* The bar takes the colour of whatever you are reading, the
-             way the panel's accent follows the answer on screen. This
-             rides the existing measurement rather than adding a second
-             scroll listener. */
-          const seen = BY_SLUG.get(found);
-          if (seen && el) el.style.setProperty("--nav-field", fieldOf(seen));
         }
+        /* every frame, not only when the highlight moves: an open card
+           can scroll out of view without the highlight changing */
+        resolveNavField(found || currentRef.current, y, line);
       }
 
       frame = 0;
