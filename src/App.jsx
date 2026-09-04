@@ -541,9 +541,9 @@ html { scroll-behavior: smooth; }
 }
 .browse.is-in { opacity: 1; transform: none; pointer-events: auto; }
 .browse-inner { max-width: 720px; margin: 0 auto; padding: 0 var(--s4); }
-/* In the flow, not fixed over it: the arrow and her name sit directly
-   above the heading, the same 8px apart as the heading and its line. */
-.browse-bar { margin-bottom: 8px; }
+/* In the flow, not fixed over it, so the arrow and her name hold a
+   fixed distance from the heading: 8 + 40 */
+.browse-bar { margin-bottom: 48px; }
 /* the same column the heading below it sits on */
 .browse-bar-inner { display: flex; align-items: center; gap: 10px; }
 .browse-back {
