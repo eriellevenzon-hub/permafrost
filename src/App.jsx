@@ -77,6 +77,13 @@ const illoFor = (slug) => `${import.meta.env.BASE_URL}illustrations/${slug}.webp
 
 const CSS = `
 :root {
+  /* the five category colours, used by the mark's shards and the cards */
+  --process: ${c.process};
+  --designpro: ${c.designpro};
+  --terms: ${c.terms};
+  --artifacts: ${c.artifacts};
+  --misc: ${c.misc};
+
   --paper: ${c.paper};
   --card: ${c.card};
   --quote: ${c.quote};
@@ -238,6 +245,7 @@ html { scroll-behavior: smooth; }
   overflow: visible;
 }
 .mark-head .mark-travel,
+.mark-bar .mark-travel { overflow: hidden; }
 .mark-bar .mark-travel {
   display: grid;
   place-items: center;
@@ -247,8 +255,11 @@ html { scroll-behavior: smooth; }
 
 /* in the header: full size, and it dissolves as the bar takes over */
 .mark-head {
-  width: calc(var(--title) * 0.92);
-  height: calc(var(--title) * 0.92);
+  /* square, at the title's own size, so the crystal stands as tall as
+     the letters beside it and scales with them */
+  flex: 0 0 auto;
+  width: var(--title);
+  height: var(--title);
   /* the same ink as the wordmark it sits beside */
   color: var(--ink);
   transition:
@@ -268,7 +279,9 @@ html { scroll-behavior: smooth; }
   height: 32px;
   margin-right: 0;
   opacity: 0;
-  overflow: hidden;
+  /* not overflow:hidden - it clipped this button's own tooltip. The
+     glyph is clipped by .mark-travel instead. */
+  overflow: visible;
   transition:
     width var(--t-enter) var(--ease),
     margin-right var(--t-enter) var(--ease),
@@ -278,7 +291,9 @@ html { scroll-behavior: smooth; }
 }
 .pf.is-lifted .mark-bar {
   width: 32px;
-  margin-right: 12px;
+  /* 7, not 12: the crystal's ink stops 4.8px short of its box, so a
+     matching margin put more air on the divider's left than its right */
+  margin-right: 7px;
   opacity: 1;
   filter: blur(0);
 }
@@ -455,7 +470,8 @@ html { scroll-behavior: smooth; }
 
 .masthead {
   text-align: center;
-  padding: 60px 0 var(--s2);
+  /* the gap under the title, down to the search row */
+  padding: 60px 0 32px;
   /* drifts up and fades as the page moves under the bar */
   transform: translate3d(0, calc(var(--sy) * -0.16px), 0);
   opacity: var(--mast-o, 1);
@@ -488,6 +504,94 @@ html { scroll-behavior: smooth; }
 .wordmark em { font-style: normal; font-weight: 400; }
 
 /* the title and the mark sit on one line before you scroll */
+/* ---- the tooltip, as in the plugin ---- */
+[data-tip] { position: relative; }
+[data-tip]::before {
+  content: attr(data-tip);
+  position: absolute; top: calc(100% + 6px); left: 50%;
+  transform: translate(-50%, -4px);
+  white-space: nowrap; pointer-events: none;
+  font-size: 9px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  /* Without this it inherits the page's 27px line-height against 9px
+     text, and the pill comes out twice the height its padding implies -
+     which is what made it read as a big grey capsule. */
+  line-height: 1;
+  color: #F8F8F8;
+  /* darker, so it reads as a label rather than a grey blob on paper */
+  background: rgba(11, 11, 20, 0.88);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  backdrop-filter: blur(8px) saturate(140%);
+  box-shadow: 0 4px 12px -8px rgba(11, 11, 20, 0.5);
+  /* a small radius, not a capsule: at this height 20px rounds it fully */
+  padding: 6px 8px; border-radius: 4px;
+  opacity: 0; z-index: 60;
+  transition: opacity var(--t-micro) var(--soft), transform var(--t-enter) var(--ease);
+}
+[data-tip]:hover::before { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---- browse: the plugin's page, as an overlay ---- */
+.browse {
+  position: fixed; inset: 0; z-index: 50;
+  background: var(--paper);
+  overflow-y: auto; overscroll-behavior: contain;
+  /* the bar scrolls with the content now, so this is the page's own top */
+  padding: 64px 0 80px;
+  opacity: 0; transform: translateY(6px); pointer-events: none;
+  transition: opacity 260ms var(--soft), transform var(--t-enter) var(--ease);
+}
+.browse.is-in { opacity: 1; transform: none; pointer-events: auto; }
+.browse-inner { max-width: 720px; margin: 0 auto; padding: 0 var(--s4); }
+/* In the flow, not fixed over it: the arrow and her name sit directly
+   above the heading, the same 8px apart as the heading and its line. */
+.browse-bar { margin-bottom: 8px; }
+/* the same column the heading below it sits on */
+.browse-bar-inner { display: flex; align-items: center; gap: 10px; }
+.browse-back {
+  flex: 0 0 auto; width: 16px; height: 12px;
+  display: flex; align-items: center; justify-content: flex-start;
+  color: var(--ink); cursor: pointer; line-height: 0;
+  transition: color var(--t-micro) var(--soft);
+}
+.browse-back:hover { color: #1F51FF; }
+.browse-back svg { width: 16px; height: 12px; display: block; }
+.browse-name {
+  font-family: var(--display); text-transform: uppercase;
+  font-size: 22px; line-height: 1; letter-spacing: -0.01em; color: var(--ink);
+}
+.browse-head h2 {
+  font-family: var(--display); text-transform: uppercase; letter-spacing: -0.025em;
+  font-size: clamp(34px, 5vw, 56px); line-height: 1.05; margin: 0 0 8px; color: #1F51FF;
+}
+.browse-head p { margin: 0 0 26px; font-size: 17px; line-height: 1.35; color: var(--ink2); }
+.bgroup + .bgroup { border-top: 1px solid var(--rule); }
+.bgroup-head {
+  width: 100%; display: flex; align-items: center; gap: 12px;
+  padding: 18px 2px; cursor: pointer;
+}
+.bgroup-head .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--field); flex: 0 0 auto; }
+.bgroup-head .nm { font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.bgroup-head .n { font-size: 11px; font-weight: 700; color: var(--ink3); margin-left: auto; }
+.bgroup-head .caret { width: 15px; height: 15px; color: var(--ink3); transition: transform var(--t-enter) var(--ease); }
+.bgroup.is-open .caret { transform: rotate(180deg); }
+.bgroup.is-open .nm { color: var(--field); }
+/* Its own timing: --t-open is 520ms on a strongly decelerating curve,
+   which crawls at the end of a collapse. And the padding used to snap
+   while the rows eased, which is the jump at the close. */
+.bgroup-body {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows 340ms cubic-bezier(0.3, 0.82, 0.3, 1);
+}
+.bgroup.is-open .bgroup-body { grid-template-rows: 1fr; }
+.bgroup-body > div {
+  overflow: hidden;
+  padding-bottom: 0;
+  opacity: 0;
+  transition:
+    padding-bottom 340ms cubic-bezier(0.3, 0.82, 0.3, 1),
+    opacity 220ms var(--soft);
+}
+.bgroup.is-open .bgroup-body > div { padding-bottom: 20px; opacity: 1; }
+
 .mast-row {
   display: flex;
   justify-content: center;
@@ -501,9 +605,10 @@ html { scroll-behavior: smooth; }
 .title-wrap {
   position: relative;
   display: flex;
-  flex-direction: column;
+  /* the mark reads as part of the name, not a thing stacked above it */
+  flex-direction: row;
   align-items: center;
-  gap: var(--s4);
+  gap: calc(var(--title) * 0.16);
 }
 .title-wrap .wordmark { margin: 0; }
 
@@ -579,6 +684,35 @@ html { scroll-behavior: smooth; }
 /* --- the mark ----------------------------------------------- */
 
 .mark-star { transform-origin: 50% 50%; transform-box: fill-box; }
+
+/* the crystal, and the four it breaks into */
+/* In the masthead it is the plugin's blue. Once it has shrunk into the
+   bar it follows whatever you are reading, like the rest of the nav -
+   currentColor is already --nav-field there. */
+.mark-head .core { fill: #1F51FF; }
+.mark-bar .core { fill: currentColor; }
+.mark-bar .s1, .mark-head .s1 { fill: var(--artifacts); }
+.mark-bar .s2, .mark-head .s2 { stroke: var(--designpro); fill: none; }
+.mark-bar .s3, .mark-head .s3 { fill: var(--process); }
+.mark-bar .s4, .mark-head .s4 { fill: var(--misc); }
+.mark-bar svg > *, .mark-head svg > * {
+  transform-box: view-box;
+  transform-origin: 12px 12px;
+  transition: transform var(--t-enter) var(--ease), opacity 240ms var(--soft);
+}
+.mark-bar .s1, .mark-head .s1 { opacity: 0; transform: translate(5.5px, 5.5px) scale(0.4); }
+.mark-bar .s2, .mark-head .s2 { opacity: 0; transform: translate(-5.5px, 5.5px) scale(0.4); }
+.mark-bar .s3, .mark-head .s3 { opacity: 0; transform: translate(5.5px, -5.5px) scale(0.4); }
+.mark-bar .s4, .mark-head .s4 { opacity: 0; transform: translate(-5.5px, -5.5px) scale(0.4); }
+/* Either one bursts it: the mark on its own hover, or the name beside
+   it. Only the name scatters the dust, though - that belongs to the
+   letters. */
+.mark-bar:hover .core, .mark-head:hover .core,
+.title-wrap.is-naming .core { opacity: 0; transform: scale(0.55); }
+.mark-bar:hover .s1, .mark-head:hover .s1, .title-wrap.is-naming .s1,
+.mark-bar:hover .s2, .mark-head:hover .s2, .title-wrap.is-naming .s2,
+.mark-bar:hover .s3, .mark-head:hover .s3, .title-wrap.is-naming .s3,
+.mark-bar:hover .s4, .mark-head:hover .s4, .title-wrap.is-naming .s4 { opacity: 1; transform: none; }
 
 /* --- hovering the mark in the bar: burst, then re-form -------- */
 
@@ -1045,7 +1179,7 @@ html { scroll-behavior: smooth; }
 
 /* The pill itself keeps its shape; the padding goes on a wrapper, so
    the filled surface is unchanged and only its position shifts. */
-.aud-wrap { display: inline-flex; padding-top: 2px; }
+.aud-wrap { display: inline-flex; gap: 4px; padding-top: 2px; }
 
 .aud {
   display: inline-block;
@@ -1380,33 +1514,21 @@ const FLAKES = [
 
 function MarkGlyph() {
   return (
-    <svg viewBox="0 0 48 48" aria-hidden="true">
-      <g fill="currentColor">
-        {/* The path lives in a 0–100 box; scale it to fill 0–48
-            exactly so the slot width is the glyph width, with no
-            hidden padding shrinking it.
-            The full rosette at every size — FROST_MARK_SIMPLE is
-            available for surfaces too small to hold the interior
-            holes, but this one is the real mark. */}
-        <g transform="scale(0.48)">
-          <g className="mark-star">
-            <path d={FROST_MARK_PATH} fillRule="evenodd" />
-          </g>
-        </g>
-        {FLAKES.map((f, i) => (
-          <circle
-            key={i}
-            className="flake"
-            cx={f.x}
-            cy={f.y}
-            r={f.r}
-            style={{ "--fx": `${f.fx}px`, "--fd": `${f.d}ms` }}
-          />
-        ))}
+    /* The plugin's mark: one crystal at rest, four shards on hover -
+       a cell, a flake, a shard and a bead. Same 24 box as the panel so
+       the two products carry the same object. */
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path className="core" d="M12 1.6L20.4 9.2 12 22.4 3.6 9.2z" />
+      <path className="s1" d="M11.1 6.5L8.8 10.5H4.2L1.9 6.5 4.2 2.5h4.6z" />
+      <g className="s2" strokeWidth="1.9" strokeLinecap="round">
+        <path d="M12.9 6.5h9.2M15.2 2.5l4.6 8M19.8 2.5l-4.6 8" />
       </g>
+      <path className="s3" d="M6.5 12.9L11.1 17.5 6.5 22.1 1.9 17.5z" />
+      <circle className="s4" cx="17.5" cy="17.5" r="4.4" />
     </svg>
   );
 }
+
 
 /* The dust that carries the mark across. These are HTML, not SVG
    circles: inside a scaled <svg> a translate of 600px means 600
@@ -1543,16 +1665,16 @@ const LinkIcon = () => (
    Data helpers
    ============================================================ */
 
-/* "Everything" and "Everyone" were a coin flip to tell apart, and
-   they sat next to each other. "All" is the whole vocabulary;
-   "Shared" is the subset nobody owns — the words every discipline
-   uses. The card badge says Shared too, so the tab and the label
-   on a term are the same word. */
-const AUDIENCE_LABELS = { all: "Shared", designers: "Designers", devs: "Devs", content: "Content" };
+/* "Shared" said the words belonged to no one in particular, which read
+   as vague rather than inclusive - and it sat beside a filter called
+   "All", so the two were easy to confuse. "All teams" names who uses
+   the term, and pairs against "Everything" for the whole vocabulary:
+   teams versus things, rather than two words for the same idea. */
+const AUDIENCE_LABELS = { all: "All teams", designers: "Designers", devs: "Devs", content: "Content" };
 
 const FILTERS = [
-  { key: "everything", label: "All" },
-  { key: "all", label: "Shared" },
+  { key: "everything", label: "Everything" },
+  { key: "all", label: "All teams" },
   { key: "designers", label: "Designers" },
   { key: "devs", label: "Devs" },
   { key: "content", label: "Content" },
@@ -1697,6 +1819,9 @@ export default function App() {
   const indexRef = useRef(null);
   const [melting, setMelting] = useState(false);
   const [traveling, setTraveling] = useState(false);
+  const [naming, setNaming] = useState(false);
+  const [browsing, setBrowsing] = useState(false);
+  const [openGroup, setOpenGroup] = useState(null);
 
   const searched = useMemo(() => VOCABULARY.filter((e) => matches(e, query)), [query]);
   const visible = useMemo(() => searched.filter((e) => inAudience(e, filter)), [searched, filter]);
@@ -1929,7 +2054,13 @@ export default function App() {
     []
   );
 
+  /* The plugin's mark opens "all 74 words". Here the whole page already
+     is that, so the mark clears whatever is narrowing it - the search,
+     the filter, an open card - and returns you to the full list. */
   const toTop = useCallback(() => {
+    setQuery("");
+    setFilter("everything");
+    setOpen(null);
     window.scrollTo({ top: 0, behavior: reduced() ? "auto" : "smooth" });
   }, []);
 
@@ -2055,6 +2186,84 @@ export default function App() {
     <div className={`pf ${lifted ? "is-lifted" : ""}`} ref={rootRef}>
       <style>{CSS}</style>
 
+      {/* The plugin's browse page, as an overlay. The site already lists
+          everything, but collapsed by category it answers the same
+          question - what is in here? - without a scroll. */}
+      <div className={`browse ${browsing ? "is-in" : ""}`} aria-hidden={!browsing}>
+        <div className="browse-inner">
+        {/* the plugin's bar: the back arrow, then her name */}
+        <div className="browse-bar">
+          <div className="browse-bar-inner">
+          <button
+            className="browse-back"
+            type="button"
+            onClick={() => setBrowsing(false)}
+            aria-label="Back"
+            data-tip="Back"
+          >
+            <svg viewBox="4 6 16 12" fill="none" aria-hidden="true">
+              <path d="M19 12H5M10 7l-5 5 5 5" stroke="currentColor" strokeWidth="2"
+                strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <span className="browse-name">Simone</span>
+          </div>
+        </div>
+          <div className="browse-head">
+            <h2>All {VOCABULARY.length} words</h2>
+            <p>Frost has named them. Each has its place.</p>
+          </div>
+          {CATEGORIES.map((cat) => {
+            const list = VOCABULARY.filter((e) => e.category === cat)
+              .slice()
+              .sort((a, b) => a.term.localeCompare(b.term));
+            if (!list.length) return null;
+            const isOpen = openGroup === cat;
+            return (
+              <div
+                className={`bgroup ${isOpen ? "is-open" : ""}`}
+                key={cat}
+                style={{ "--field": FIELD[cat] }}
+              >
+                <button
+                  className="bgroup-head"
+                  type="button"
+                  onClick={() => setOpenGroup(isOpen ? null : cat)}
+                  aria-expanded={isOpen}
+                >
+                  <span className="dot" />
+                  <span className="nm">{cat}</span>
+                  <span className="n">{list.length}</span>
+                  <svg className="caret" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M6 9.5l6 6 6-6" stroke="currentColor" strokeWidth="2.4"
+                      strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+                <div className="bgroup-body">
+                  <div>
+                    <div className="nearby-row">
+                      {list.map((e) => (
+                        <button
+                          key={e.slug}
+                          className="btn"
+                          style={{ "--field": FIELD[cat] }}
+                          onClick={() => {
+                            setBrowsing(false);
+                            goTo(e.slug);
+                          }}
+                        >
+                          {e.term}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* shared by the snow and by the dissolving ghost, so it has to sit
           outside <Snow/> — that returns null under reduced motion */}
       <svg className="snow-defs" aria-hidden="true">
@@ -2080,18 +2289,17 @@ export default function App() {
       <header className="shell masthead">
         <div className="mast-row">
           <span
-            className={`title-wrap ${traveling ? "is-melting" : ""}`}
-            onMouseEnter={skate}
+            className={`title-wrap ${traveling ? "is-melting" : ""} ${
+              naming ? "is-naming" : ""
+            }`}
             ref={mastRow}
           >
           <button
             className={`mark-head ${traveling ? "is-traveling" : ""}`}
             ref={headMark}
-            onMouseEnter={skate}
-            onFocus={skate}
-            onClick={toTop}
-            aria-label="Back to top"
-            title="Back to top"
+            onClick={() => setBrowsing(true)}
+            aria-label="Browse all 74 words"
+            data-tip="Browse all 74"
           >
             <span className="mark-travel">
               <MarkGlyph />
@@ -2114,7 +2322,16 @@ export default function App() {
               ))}
             </span>
           </button>
-          <h1 className="wordmark">
+          {/* The burst belongs to the name, not the mark: hovering the
+              letters is what scatters it. */}
+          <h1
+            className="wordmark"
+            onMouseEnter={() => {
+              setNaming(true);
+              skate();
+            }}
+            onMouseLeave={() => setNaming(false)}
+          >
             Simone’s <em>Permafrost</em>
           </h1>
           <span className="title-snow" aria-hidden="true">
@@ -2144,9 +2361,9 @@ export default function App() {
               className={`mark-bar ${melting ? "is-melting" : ""}`}
               onMouseEnter={thaw}
               onFocus={thaw}
-              onClick={toTop}
-              aria-label="Back to top"
-              title="Back to top"
+              onClick={() => setBrowsing(true)}
+              aria-label="Browse all 74 words"
+              data-tip="Browse all 74"
               tabIndex={lifted ? 0 : -1}
             >
               <span className="mark-travel">
@@ -2355,7 +2572,12 @@ function Card({ entry, delay, isOpen, onToggle, register, onNavigate }) {
         <span className="card-title">
           <h3>{entry.term}</h3>
           <span className="aud-wrap">
-            <span className="aud">{audienceLabel(entry)}</span>
+            {/* one tag per team, so a term used by two reads as two */}
+            {entry.audience.map((a) => (
+              <span className="aud" key={a}>
+                {AUDIENCE_LABELS[a] || a}
+              </span>
+            ))}
           </span>
           <span className="chev" aria-hidden="true">
             <Chevron />
