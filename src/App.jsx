@@ -126,7 +126,9 @@ const CSS = `
   --col-gap: 60px;
   /* a chip's own left/right padding — the gap between its box and
      the word inside it */
-  --chip-pad: 13px;
+  /* 11, not 13: the six tabs now include Browse, and the pair of pixels
+     each side gives 24px back to the search field */
+  --chip-pad: 11px;
   /* Ink, not boxes. A mono glyph carries a side bearing and the
      letter-spacing adds a trailing gap after the last character, so
      the "1" stops about 5px short of its own text box. Measured off
@@ -291,9 +293,8 @@ html { scroll-behavior: smooth; }
 }
 .pf.is-lifted .mark-bar {
   width: 32px;
-  /* 7, not 12: the crystal's ink stops 4.8px short of its box, so a
-     matching margin put more air on the divider's left than its right */
-  margin-right: 7px;
+  margin-left: -2px;
+  margin-right: 9px;
   opacity: 1;
   filter: blur(0);
 }
@@ -505,29 +506,7 @@ html { scroll-behavior: smooth; }
 
 /* the title and the mark sit on one line before you scroll */
 /* ---- the tooltip, as in the plugin ---- */
-[data-tip] { position: relative; }
-[data-tip]::before {
-  content: attr(data-tip);
-  position: absolute; top: calc(100% + 6px); left: 50%;
-  transform: translate(-50%, -4px);
-  white-space: nowrap; pointer-events: none;
-  font-size: 9px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
-  /* Without this it inherits the page's 27px line-height against 9px
-     text, and the pill comes out twice the height its padding implies -
-     which is what made it read as a big grey capsule. */
-  line-height: 1;
-  color: #F8F8F8;
-  /* darker, so it reads as a label rather than a grey blob on paper */
-  background: rgba(11, 11, 20, 0.88);
-  -webkit-backdrop-filter: blur(8px) saturate(140%);
-  backdrop-filter: blur(8px) saturate(140%);
-  box-shadow: 0 4px 12px -8px rgba(11, 11, 20, 0.5);
-  /* a small radius, not a capsule: at this height 20px rounds it fully */
-  padding: 6px 8px; border-radius: 4px;
-  opacity: 0; z-index: 60;
-  transition: opacity var(--t-micro) var(--soft), transform var(--t-enter) var(--ease);
-}
-[data-tip]:hover::before { opacity: 1; transform: translate(-50%, 0); }
+
 
 /* ---- browse: the plugin's page, as an overlay ---- */
 .browse {
@@ -815,21 +794,61 @@ html { scroll-behavior: smooth; }
 
 /* closes to nothing with the mark, so the search can sit flush at
    the top of the page and be pushed right as the mark opens */
-.bar-split {
-  width: 0; height: 26px; flex: 0 0 auto;
-  margin-right: 0;
-  background: var(--rule-strong);
-  opacity: 0;
-  transition:
-    width var(--t-enter) var(--ease),
-    margin-right var(--t-enter) var(--ease),
-    opacity var(--t-control) var(--soft);
+/* the same tab as the filters beside it */
+.bar-link {
+  flex: 0 0 auto;
+  height: 34px; display: inline-flex; align-items: center;
+  padding: 0 var(--chip-pad);
+  font-family: var(--sans); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink3);
+  border-radius: var(--radius); border: none; cursor: pointer; background: transparent;
+  /* the chips override their background to --t-enter further down, so
+     this matched their base rule but not the way they actually behave -
+     260ms against 720ms read as a snap beside them */
+  transition: color var(--t-micro) var(--soft),
+              background var(--t-enter) var(--soft),
+              transform var(--t-control) var(--ease);
 }
-.controls.is-lifted .bar-split { width: 1px; margin-right: 12px; opacity: 1; }
+.bar-link:hover { background: #1F51FF; color: #FFFFFF; box-shadow: none; }
+.bar-link:active { transform: scale(0.97); transition-duration: 90ms; }
+
+/* a rule between the filters and it, so it does not read as a sixth
+   way of narrowing the list */
+.bar-rule {
+  flex: 0 0 auto; width: 1px; height: 20px;
+  /* inside the container now, so it only has to clear the 4px gap the
+     row already sets either side of it */
+  margin: 0 2px;
+  background: var(--rule-strong); opacity: 0.7;
+}
+
+
+/* the rule between the mark and the search field is gone; the space it
+   held goes to the field so its placeholder is not clipped */
 
 /* --- search ------------------------------------------------ */
 
-.search { flex: 1 1 300px; position: relative; display: flex; align-items: center; }
+/* Fixed, not flexible: growing to fill pushed the tabs wherever the
+   leftover space put them. Pinned like this the first tab lands on the
+   same left edge as the cards and the category labels below.
+
+   Two widths, because the mark is 0 wide at rest and 31px once lifted
+   (32 plus its -6/+5 margins) - a single width could only align in one
+   of the two states. The 4px is the filters wrapper's 3px padding and
+   1px border, so the chip's own box sits on the line. */
+.search {
+  flex: 0 0 calc(
+    var(--rail) + var(--col-gap) - var(--bar-inset) - 6px - 4px
+  );
+  position: relative; display: flex; align-items: center;
+  transition: flex-basis var(--t-enter) var(--ease);
+}
+.pf.is-lifted .search {
+  flex-basis: calc(
+    var(--rail) + var(--col-gap) - var(--bar-inset) - 31px - 6px - 4px
+  );
+}
 
 .search input {
   width: 100%; height: 42px;
@@ -837,7 +856,7 @@ html { scroll-behavior: smooth; }
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   padding: 0 var(--s5) 0 var(--s2);
-  font-family: var(--sans); font-size: 13px; color: var(--ink);
+  font-family: var(--sans); font-size: 12px; color: var(--ink);
   outline: none;
   transition: border-color var(--t-micro) var(--soft),
               background var(--t-micro) var(--soft),
@@ -866,8 +885,12 @@ html { scroll-behavior: smooth; }
 /* the group gets its own pane of frost once the bar lifts, so the
    tabs read as one control rather than five loose words */
 .filters {
-  display: flex; gap: 10px; align-items: center; flex: 0 0 auto;
-  margin-left: 12px;
+  display: flex; gap: 4px; align-items: center; flex: 0 0 auto;
+  margin-left: 6px;
+  /* -6, matching the mark's own -6 on the left: the bar's 14px padding
+     and 1px border apply equally, so the two nudges put the container's
+     right edge and the mark's box the same 9px from the bar. */
+  margin-right: -6px;
   padding: 3px;
   /* concentric with the chips inside: outer radius = inner + padding */
   border-radius: calc(var(--radius) + 3px);
@@ -889,7 +912,7 @@ html { scroll-behavior: smooth; }
 .chip {
   height: 34px; display: inline-flex; align-items: center;
   padding: 0 var(--chip-pad);
-  font-family: var(--sans); font-size: 11px; font-weight: 700;
+  font-family: var(--sans); font-size: 10px; font-weight: 700;
   letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--ink3);
   border-radius: var(--radius); border: none; cursor: pointer; background: transparent;
@@ -918,7 +941,7 @@ html { scroll-behavior: smooth; }
 .chip[aria-pressed="true"]:hover { background: var(--nav-field, var(--accent)); color: #fff; filter: brightness(0.85); }
 
 .tally {
-  font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+  font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--ink3);
   margin-left: 12px; padding-right: var(--chip-pad); white-space: nowrap;
   font-variant-numeric: tabular-nums;
@@ -2199,7 +2222,6 @@ export default function App() {
             type="button"
             onClick={() => setBrowsing(false)}
             aria-label="Back"
-            data-tip="Back"
           >
             <svg viewBox="4 6 16 12" fill="none" aria-hidden="true">
               <path d="M19 12H5M10 7l-5 5 5 5" stroke="currentColor" strokeWidth="2"
@@ -2297,9 +2319,8 @@ export default function App() {
           <button
             className={`mark-head ${traveling ? "is-traveling" : ""}`}
             ref={headMark}
-            onClick={() => setBrowsing(true)}
-            aria-label="Browse all 74 words"
-            data-tip="Browse all 74"
+            onClick={toTop}
+            aria-label="Show everything"
           >
             <span className="mark-travel">
               <MarkGlyph />
@@ -2361,16 +2382,14 @@ export default function App() {
               className={`mark-bar ${melting ? "is-melting" : ""}`}
               onMouseEnter={thaw}
               onFocus={thaw}
-              onClick={() => setBrowsing(true)}
-              aria-label="Browse all 74 words"
-              data-tip="Browse all 74"
+              onClick={toTop}
+              aria-label="Show everything"
               tabIndex={lifted ? 0 : -1}
             >
               <span className="mark-travel">
                 <MarkGlyph />
               </span>
             </button>
-            <span className="bar-split" aria-hidden="true" />
 
             <div className="search">
               <input
@@ -2397,7 +2416,7 @@ export default function App() {
               )}
             </div>
 
-            <div className="filters" role="group" aria-label="Filter by audience">
+            <div className="filters" role="group" aria-label="Filter the list, or browse everything">
               {FILTERS.map((f) => (
                 <Ripple
                   key={f.key}
@@ -2410,10 +2429,20 @@ export default function App() {
                   <span className="n">{counts[f.key]}</span>
                 </Ripple>
               ))}
+
+              {/* inside the same container as the tabs, so it reads as
+                  part of the set rather than floating beside it */}
+              <span className="bar-rule" aria-hidden="true" />
+              <button
+                className="bar-link"
+                type="button"
+                onClick={() => setBrowsing(true)}
+              >
+                Browse
+              </button>
             </div>
 
             {narrowed && <span className="tally">{tally}</span>}
-
           </div>
         </div>
       </div>
