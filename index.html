@@ -11,11 +11,22 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Rubik+Mono+One&display=swap"
       rel="stylesheet"
     />
   </head>
   <body>
+    <!-- Netlify scans the built HTML at deploy time, so the form has to
+         exist here as plain markup. The React panel posts to it. -->
+    <form name="propose" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="propose" />
+      <input name="bot-field" />
+      <input name="kind" /><input name="term" /><input name="slug" />
+      <textarea name="meaning"></textarea>
+      <textarea name="example"></textarea>
+      <input name="said_by" /><input name="category" /><input name="from" />
+    </form>
+
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

@@ -120,7 +120,9 @@ const CSS = `
   --s1: 8px;  --s2: 16px; --s3: 24px;
   --s4: 32px; --s5: 48px; --s6: 72px;
 
-  --title: clamp(34px, 5.4vw, 72px);
+  /* Rubik Mono One is monospaced: the same string is ~40% wider than in
+     Impact, so the whole display scale steps down to fit the column */
+  --title: clamp(22px, 3.8vw, 52px);
   --rail: 258px;
   /* the bar insets its content by this on both sides */
   --bar-inset: 14px;
@@ -262,8 +264,8 @@ html { scroll-behavior: smooth; }
 /* in the header: full size, and it dissolves as the bar takes over */
 .mark-head {
   flex: 0 0 auto;
-  width: 96px;
-  height: 96px;
+  width: 64px;
+  height: 64px;
   /* the same ink as the wordmark it sits beside */
   color: var(--ink);
   transition:
@@ -296,17 +298,12 @@ html { scroll-behavior: smooth; }
 .pf.is-lifted .mark-bar {
   width: 32px;
   margin-left: -2px;
-  /* 13, not 9: the field carries a -4px pull of its own, so the gap the
-     eye sees between the crystal and the field was 4px short of this */
-  margin-right: 13px;
+  margin-right: 9px;
   opacity: 1;
   filter: blur(0);
 }
-/* no pointer, no burst, no hover colour when there is nothing to do */
-.mark-head.is-inert { cursor: default; }
-
 .mark-bar:hover,
-.mark-head:not(.is-inert):hover {
+.mark-head:hover {
   filter: brightness(0.8);
 }
 
@@ -500,7 +497,7 @@ html { scroll-behavior: smooth; }
 .wordmark {
   font-family: var(--display);
   text-transform: uppercase;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.025em;
   font-size: var(--title);
   line-height: 1.02;
   font-weight: 400;
@@ -511,23 +508,6 @@ html { scroll-behavior: smooth; }
   color: var(--ink);
 }
 .wordmark em { font-style: normal; font-weight: 400; }
-
-/* The same problem as the apostrophe, one glyph over: a monospaced space
-   is given a full advance too - 45px at 72px, where a proportional
-   display face would use about 18. word-spacing takes it off the space
-   alone, leaving every letter where it is. */
-.wordmark { word-spacing: -0.28em; }
-
-/* The display face is monospaced, so the apostrophe is given the same
-   advance as an M - about 37px of box around 7px of ink at 72px. There
-   is no kerning table to fix it; the glyph has to be pulled in by hand.
-   One value, so it can be tuned in one place. */
-.wordmark .apos {
-  --apos-pull: 0.19em;
-  display: inline-block;
-  margin-left: calc(var(--apos-pull) * -1);
-  margin-right: calc(var(--apos-pull) * -1);
-}
 
 /* the title and the mark sit on one line before you scroll */
 /* ---- the tooltip, as in the plugin ---- */
@@ -549,68 +529,45 @@ html { scroll-behavior: smooth; }
    fixed distance from the heading: 8 + 40 */
 .browse-bar { margin-bottom: 48px; }
 /* the same column the heading below it sits on */
-.browse-bar-inner { display: flex; align-items: center; gap: 10px; padding-left: 4px; }
-/* One control: the arrow and the word. They were separate elements, so
-   only the arrow was clickable and only the arrow lit on hover. */
+.browse-bar-inner { display: flex; align-items: center; gap: 10px; }
 .browse-back {
-  flex: 0 0 auto;
-  display: inline-flex; align-items: center; gap: 10px;
-  padding: 0; background: none; border: none;
-  color: var(--ink); cursor: pointer;
+  flex: 0 0 auto; width: 16px; height: 12px;
+  display: flex; align-items: center; justify-content: flex-start;
+  color: var(--ink); cursor: pointer; line-height: 0;
   transition: color var(--t-micro) var(--soft);
 }
-.browse-back svg { flex: 0 0 auto; }
-.browse-back:hover { color: #1F51FF; }
 .browse-back:hover { color: #1F51FF; }
 .browse-back svg { width: 16px; height: 12px; display: block; }
-/* currentColor, not its own ink: it set a fixed colour, so the button's
-   hover reached the arrow and stopped at the word */
 .browse-name {
   font-family: var(--display); text-transform: uppercase;
-  font-size: 22px; line-height: 1; letter-spacing: -0.02em;
-  color: currentColor;
-  transition: color var(--t-micro) var(--soft);
+  font-size: 22px; line-height: 1; letter-spacing: -0.01em; color: var(--ink);
 }
 .browse-head h2 {
-  padding-left: 6px;
   font-family: var(--display); text-transform: uppercase;
-  font-size: clamp(34px, 5vw, 56px); line-height: 1.05; margin: 0 0 8px; color: #1F51FF;
-  letter-spacing: -0.02em;
+  font-size: clamp(22px, 3vw, 34px); line-height: 1.15; margin: 0 0 8px; color: #1F51FF;
+  letter-spacing: -0.015em;
 }
-.browse-head p { margin: 0 0 26px; padding-left: 8px; font-size: 17px; line-height: 1.35; color: var(--ink2); }
+.browse-head p { margin: 0 0 26px; font-size: 17px; line-height: 1.35; color: var(--ink2); }
 /* the near-miss notice, and the empty state's two groups: what I keep on
    the left, what you can do about it on the right */
 /* No box: a real dead end is not enclosed either, and the two states are
    the same message with different amounts of luck. */
-/* A pale blue wash, not a panel. It carries the near-miss case, where
-   there are cards below to look at. */
-.near-note {
-  margin: 0 0 var(--s5);
-  padding: 22px 24px;
-  background: #F4F7FF;
-  border-radius: var(--radius);
-  /* the ground is only 1.03:1 against the page, so a soft shadow does
-     the separating a border was doing before */
-  box-shadow: 0 10px 24px -16px rgba(31, 44, 58, 0.28);
-}
+/* the same shape as a true dead end: eyebrow, the line she says, then
+   what you can do about it - stacked, not pushed to the right */
+.near-note { margin: 0 0 var(--s5); }
 .near-note h2 {
   font-family: var(--display); text-transform: uppercase;
-  font-size: 24px; line-height: 1.15;
-  letter-spacing: -0.02em; margin: 0 0 8px;
-  color: var(--ink);
+  font-size: clamp(20px, 2.6vw, 28px); line-height: 1.15;
+  letter-spacing: -0.015em; margin: 0 0 8px; color: var(--ink);
 }
-.near-note .eyebrow { color: var(--ink3); font-size: 12px; }
 .near-note p { margin: 0; font-size: 15px; color: var(--ink2); }
 .near-note .eyebrow { margin: 0 0 8px; }
 .near-actions { margin-top: 16px; }
-.near-actions, .empty-cta { display: flex; gap: 26px; flex: 0 0 auto; align-items: center; }
-/* Stacked under the message, not pushed to the far edge: with no cards
-   beside them there is nothing for them to be opposite. */
+.near-actions, .empty-cta { display: flex; gap: 20px; flex: 0 0 auto; align-items: center; }
 .empty-actions {
-  display: flex; align-items: center; justify-content: flex-start;
-  gap: 26px; flex-wrap: wrap;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 20px; flex-wrap: wrap;
 }
-.empty-cta { margin-left: 0; }
 .empty-near { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* Text links, not buttons: filled and outlined chips beside the
@@ -641,75 +598,18 @@ html { scroll-behavior: smooth; }
   animation: propose-in 320ms var(--ease) forwards;
 }
 @keyframes propose-in { to { opacity: 1; transform: none; } }
-.propose-inner { max-width: 660px; margin: 0 auto; padding: 0 var(--s4); }
-/* Its own size, not the browse overlay's 56px: "Suggest an edit" in a
-   monospaced face wrapped to two lines in a 620px column. */
-.propose .browse-head h2 { font-size: 32px; }
-.propose-hero {
-  background: #1F51FF; color: #FFFFFF;
-  border-radius: var(--radius);
-  padding: 30px 28px 28px;
-  margin: 0 0 20px;
-  box-shadow: 0 18px 40px -26px rgba(31, 81, 255, 0.55);
-}
-.propose-mark { display: block; width: 44px; height: 44px; margin: 0 0 18px; }
-.propose-mark svg { width: 44px; height: 44px; display: block; }
-/* white against the blue, and no burst: it is a mark here, not a button */
-.propose-mark .core { fill: #FFFFFF; }
-.propose-mark .s1, .propose-mark .s2,
-.propose-mark .s3, .propose-mark .s4 { opacity: 0; }
-.propose-hero h2 {
-  font-family: var(--display); text-transform: uppercase;
-  font-size: 32px; line-height: 1.05; letter-spacing: -0.02em;
-  margin: 0 0 10px; padding-left: 6px; color: #FFFFFF;
-}
-.propose-hero p {
-  margin: 0; padding-left: 6px; font-size: 15px; line-height: 1.45;
-  /* no ch cap: 46ch wrapped the line at about 345px, well inside the
-     column, so widening the panel alone would have changed nothing */
-  color: rgba(255, 255, 255, 0.88);
-}
-
-/* the fields sit on their own sheet, so the form reads as one object */
-.propose-form {
-  background: var(--card); border: 1px solid var(--rule);
-  border-radius: var(--radius); padding: 24px 24px 22px;
-  box-shadow: 0 10px 30px -22px rgba(31, 44, 58, 0.30);
-}
-
-/* the one action that submits */
-.btn-solid {
-  background: #1F51FF; border-color: #1F51FF; color: #FFFFFF;
-}
-.btn-solid:hover { background: #0818A8; border-color: #0818A8; color: #FFFFFF; }
-.btn-solid[disabled] { opacity: 0.4; cursor: default; }
-
+.propose-inner { max-width: 620px; margin: 0 auto; padding: 0 var(--s4); }
 .pf-field { display: block; margin: 0 0 16px; }
 .pf-field > span {
-  display: block; margin: 0 0 2px; padding-left: 4px;
+  display: block; margin: 0 0 6px;
   font-size: 9px; font-weight: 800; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--ink3);
 }
 .pf-field input, .pf-field textarea, .pf-field select {
-  width: 100%; font-family: var(--sans); font-size: 14px; line-height: 1.4;
-  color: var(--ink);
+  width: 100%; font-family: var(--sans); font-size: 14px; color: var(--ink);
   background: var(--card); border: 1px solid var(--rule);
-  border-radius: var(--radius); padding: 12px 14px; outline: none;
+  border-radius: var(--radius); padding: 11px 12px; outline: none;
   transition: border-color var(--t-micro) var(--soft);
-}
-.pf-field input, .pf-field select { height: 46px; }
-.pf-field textarea { padding: 12px 14px; }
-
-/* The select carried the platform's own arrow, which sat hard against
-   the edge and ignored the field's radius. This draws one instead, with
-   room kept for it. */
-.pf-field select {
-  appearance: none; -webkit-appearance: none;
-  padding-right: 38px;
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M6 9.5l6 6 6-6' stroke='%236A6A78' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  background-size: 15px 15px;
 }
 .pf-field textarea { resize: vertical; line-height: 1.45; }
 .pf-field input:focus, .pf-field textarea:focus, .pf-field select:focus {
@@ -719,8 +619,8 @@ html { scroll-behavior: smooth; }
 .propose-actions { display: flex; gap: 10px; margin-top: 22px; }
 .propose-done { padding: 10px 0; }
 .propose-done h2 {
-  font-family: var(--display); text-transform: uppercase; letter-spacing: -0.02em;
-  font-size: clamp(30px, 4vw, 44px); line-height: 1.05; margin: 0 0 10px; color: #1F51FF;
+  font-family: var(--display); text-transform: uppercase; letter-spacing: -0.015em;
+  font-size: clamp(22px, 3vw, 32px); line-height: 1.15; margin: 0 0 10px; color: #1F51FF;
 }
 .propose-done p { margin: 0 0 22px; font-size: 15px; line-height: 1.5; color: var(--ink2); max-width: 52ch; }
 
@@ -944,15 +844,12 @@ html { scroll-behavior: smooth; }
 /* Either one bursts it: the mark on its own hover, or the name beside
    it. Only the name scatters the dust, though - that belongs to the
    letters. */
-/* The burst belongs to the mark's own hover. Hovering the name used to
-   trigger it too, which set the crystal breaking apart for a gesture
-   aimed at the letters - the dust is the name's response, not this. */
-.mark-bar:hover .core,
-.mark-head:not(.is-inert):hover .core { opacity: 0; transform: scale(0.55); }
-.mark-bar:hover .s1, .mark-head:not(.is-inert):hover .s1,
-.mark-bar:hover .s2, .mark-head:not(.is-inert):hover .s2,
-.mark-bar:hover .s3, .mark-head:not(.is-inert):hover .s3,
-.mark-bar:hover .s4, .mark-head:not(.is-inert):hover .s4 { opacity: 1; transform: none; }
+.mark-bar:hover .core, .mark-head:hover .core,
+.title-wrap.is-naming .core { opacity: 0; transform: scale(0.55); }
+.mark-bar:hover .s1, .mark-head:hover .s1, .title-wrap.is-naming .s1,
+.mark-bar:hover .s2, .mark-head:hover .s2, .title-wrap.is-naming .s2,
+.mark-bar:hover .s3, .mark-head:hover .s3, .title-wrap.is-naming .s3,
+.mark-bar:hover .s4, .mark-head:hover .s4, .title-wrap.is-naming .s4 { opacity: 1; transform: none; }
 
 /* --- hovering the mark in the bar: burst, then re-form -------- */
 
@@ -1093,12 +990,7 @@ html { scroll-behavior: smooth; }
 /* Fills whatever is left. It used to be pinned so the first tab landed
    on the column edge below, which meant the field could not give ground
    when the tally appears. */
-/* -4px: the field's own edge on the rail's text column below, rather
-   than on the bar's box */
-.search {
-  flex: 1 1 auto; min-width: 0; margin-left: -4px;
-  position: relative; display: flex; align-items: center;
-}
+.search { flex: 1 1 auto; min-width: 0; position: relative; display: flex; align-items: center; }
 
 .search input {
   width: 100%; height: 42px;
@@ -1106,7 +998,7 @@ html { scroll-behavior: smooth; }
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   padding: 0 var(--s5) 0 10px;
-  font-family: var(--sans); font-size: 14px; color: var(--ink);
+  font-family: var(--sans); font-size: 12px; color: var(--ink);
   outline: none;
   transition: border-color var(--t-micro) var(--soft),
               background var(--t-micro) var(--soft),
@@ -1204,7 +1096,7 @@ html { scroll-behavior: smooth; }
    as decoration. */
 .btn {
   display: inline-flex; align-items: center; gap: 7px;
-  padding: 9px 12px 8px;
+  padding: 8px 10px 6px;
   font-family: var(--sans); font-size: 9px; font-weight: 700;
   letter-spacing: 0.08em; text-transform: uppercase; line-height: 1;
   color: var(--field, var(--accent));
@@ -1233,9 +1125,7 @@ html { scroll-behavior: smooth; }
   background: transparent;
   border-color: var(--rule);
 }
-/* It still inherits the filled hover from .btn, so dark ink sat on a
-   blue ground. White, like every other filled state. */
-.btn-quiet:hover { color: #FFFFFF; border-color: var(--field, var(--accent)); }
+.btn-quiet:hover { color: var(--ink); border-color: var(--rule-strong); }
 
 .btn svg { width: 12px; height: 12px; flex: 0 0 auto; }
 
@@ -1309,8 +1199,7 @@ html { scroll-behavior: smooth; }
 }
 .index-item:hover {
   color: var(--ink);
-  /* no nudge: it moved the hovered row 3px right of every other row, so
-     its marker no longer lined up with the active one above it */
+  transform: translateX(3px);
   background: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0.92) 0%,
@@ -1446,9 +1335,7 @@ html { scroll-behavior: smooth; }
 }
 .card-title h3 {
   font-family: var(--display); text-transform: uppercase;
-  font-size: 30px; line-height: 30px; letter-spacing: -0.02em;
-  /* "Passed QA Validation" carries two monospaced spaces */
-  word-spacing: -0.22em;
+  font-size: 22px; line-height: 26px; letter-spacing: 0.005em;
   font-weight: 400; margin: 0; color: var(--ink);
   transition: color var(--t-micro) var(--soft);
 }
@@ -1457,7 +1344,7 @@ html { scroll-behavior: smooth; }
 
 /* The pill itself keeps its shape; the padding goes on a wrapper, so
    the filled surface is unchanged and only its position shifts. */
-.aud-wrap { display: inline-flex; gap: 4px; margin-top: -2px; }
+.aud-wrap { display: inline-flex; gap: 4px; padding-top: 2px; }
 .aud.status-proposed { color: #7A5C00; background: #FFF4CC; }
 .aud.status-retired { color: var(--ink3); background: var(--sunk); text-decoration: line-through; }
 /* An anchor, so the browser draws its own underline - the button beside
@@ -1478,7 +1365,6 @@ html { scroll-behavior: smooth; }
 
 .chev {
   margin-left: auto; width: 26px; height: 26px; flex: 0 0 auto;
-  margin-top: -4px;
   /* box-sizing keeps the 26px box; the padding lifts the glyph inside
      it so it centres against the cap height rather than the line box */
   padding-bottom: 3px;
@@ -1541,11 +1427,7 @@ html { scroll-behavior: smooth; }
   overflow: hidden;
 }
 .illo img {
-  /* Scaled, not cropped: the frame has no fixed height and the image is
-     not object-fit, so capping its width shrinks the whole picture and
-     loses nothing. One value to tune. */
-  width: 100%; max-width: var(--illo-max, 520px); height: auto;
-  margin: 0 auto; display: block;
+  width: 100%; height: auto; display: block;
   opacity: 0; transform: scale(1.012);
   transition: opacity 620ms var(--soft), transform 900ms var(--ease);
 }
@@ -1555,20 +1437,17 @@ html { scroll-behavior: smooth; }
   margin: var(--s3) 0 0;
   padding: var(--s3);
   border-radius: 0;
-  background: color-mix(in srgb, var(--field) 4%, rgba(255,255,255,0.92));
+  background: color-mix(in srgb, var(--field) 13%, rgba(255,255,255,0.72));
   -webkit-backdrop-filter: blur(14px) saturate(170%);
   backdrop-filter: blur(14px) saturate(170%);
   box-shadow: 0 2px 10px -6px rgba(11,11,20,0.28);
 }
 .quote p {
-  /* the quotation marks already say it is speech; italics on top of
-     them is the same thing said twice */
-  margin: 0; font-family: var(--sans); font-style: normal;
-  /* the same as the definition it sits under */
-  font-size: 17px; line-height: 27px; color: var(--ink);
+  margin: 0; font-family: var(--serif); font-style: italic;
+  font-size: 19px; line-height: 30px; color: var(--ink);
 }
 .quote footer {
-  margin-top: 12px; padding-left: 4px; font-size: 10px; font-weight: 500;
+  margin-top: 12px; font-size: 10px; font-weight: 500;
   letter-spacing: 0.06em; text-transform: uppercase; color: #3C3C48;
 }
 
@@ -1650,23 +1529,13 @@ html { scroll-behavior: smooth; }
 
 /* --- empty ------------------------------------------------- */
 
-/* No ground here: a block exists to separate a message from the cards
-   under it, and on a true dead end there are none - the tint would be
-   framing an empty page. */
-.empty {
-  padding: 8px 0 var(--s5); margin: 0;
-  max-width: none;
-}
+.empty { padding: var(--s6) 0 var(--s5); max-width: 46ch; }
 .empty h2 {
-  font-family: var(--display); text-transform: uppercase;
-  font-size: 24px; line-height: 1.15; letter-spacing: -0.02em;
-  margin: 0 0 8px; color: var(--ink);
+  font-family: var(--serif); font-size: 28px; line-height: 38px;
+  font-weight: 400; margin: var(--s2) 0 0; color: var(--ink);
 }
-.empty > p { max-width: 52ch; }
-.empty .eyebrow { color: var(--ink3); font-size: 12px; }
-
 .empty p { color: var(--ink3); margin: 12px 0 0; }
-.empty-actions { margin-top: var(--s3); }
+.empty-actions { margin-top: var(--s3); display: flex; gap: var(--s1); flex-wrap: wrap; }
 
 /* --- foot -------------------------------------------------- */
 
@@ -1684,82 +1553,31 @@ html { scroll-behavior: smooth; }
 
 /* --- responsive -------------------------------------------- */
 
-/* ============================================================
-   BREAKPOINTS
-
-   1180  the rail narrows; the shell stops being capped and starts
-         taking the window, so the gutters do the giving
-    980  one column. The index rail collapses to a toggle, the bar
-         wraps, and the field takes a row of its own
-    640  phone. The filters and the vocabulary menu move into a
-         sheet behind one button, the masthead loses its stack, and
-         the display type steps down
-    420  the smallest we design for; padding tightens again
-   ============================================================ */
-
-
-/* ============================================================
-   BREAKPOINTS
-
-   1180  the rail narrows and the shell stops being capped, so the
-         gutters give rather than the content column
-   1024  the floor. Below it the site does not adapt - it steps
-         aside and asks for a wider screen
-   ============================================================ */
-
-.too-small { display: none; }
-
-@media (max-width: 1023px) {
-  .pf > *:not(.too-small) { display: none; }
-  /* Three zones: the mark at the top, the line she says in the middle,
-     and the practical note as a footnote at the base. */
-  .too-small {
-    display: flex; flex-direction: column; align-items: center;
-    position: fixed; inset: 0; z-index: 100;
-    background: var(--paper); padding: 80px 32px 56px;
+@media (max-width: 980px) {
+  .mark-head { width: 64px; height: 64px; }
+  .title-wrap { gap: 24px; }
+  :root { --gutter: 20px; --rail: 100%; }
+  .masthead { padding: 56px 0 var(--s3); }
+  .body { grid-template-columns: 1fr; gap: 0; }
+  .bar { height: auto; flex-wrap: wrap; padding: 10px; border-radius: var(--radius); }
+  .search { flex: 1 1 100%; order: 3; }
+  .filters { order: 2; overflow-x: auto; max-width: 100%; margin-left: 0; }
+  .tally { display: none; }
+  .index-toggle {
+    display: inline-flex; align-items: center; height: 36px; padding: 0 14px;
+    margin-top: var(--s3);
+    font-family: var(--sans); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink2); border: 1px solid var(--rule-strong);
+    border-radius: var(--radius); cursor: pointer; background: var(--card);
   }
-  .too-small-inner {
-    display: flex; flex-direction: column; align-items: center;
-    flex: 1 1 auto; width: 100%; max-width: 40rem; text-align: center;
+  .index {
+    position: static; max-height: none; overflow: visible;
+    padding: var(--s2) 0 var(--s3); border-bottom: 1px solid var(--rule);
   }
-  .too-small-mark { display: block; width: 88px; height: 88px; flex: 0 0 auto; }
-  .too-small-mark svg { width: 88px; height: 88px; display: block; }
-  .too-small-mark .core { fill: #1F51FF; }
-  .too-small-mark .s1, .too-small-mark .s2,
-  .too-small-mark .s3, .too-small-mark .s4 { opacity: 0; }
-  /* Centred between the mark and the footnote, then lifted 24px: an
-     optical centre sits a little above a measured one. */
-  .too-small h1 {
-    flex: 1 1 auto;
-    display: flex; align-items: center; justify-content: center;
-    transform: translateY(-24px);
-    font-family: var(--display); text-transform: uppercase;
-    font-size: 44px; line-height: 1.1;
-    letter-spacing: -0.02em; margin: 0; color: var(--ink);
-  }
-  .too-small-line {
-    flex: 0 0 auto; margin: 0;
-    font-size: 16px; line-height: 1.5; color: var(--ink3);
-    /* 517px at 16px against 576px of column */
-    white-space: nowrap;
-  }
-
-}
-
-@media (max-width: 1180px) {
-  :root { --rail: 210px; --col-gap: 40px; }
-  .shell { max-width: none; }
-}
-
-/* phone. At 320px the column gives about 256px, which the longer
-   sentence fills at 12px and the heading at 22px. */
-@media (max-width: 640px) {
-  .too-small { padding: 48px 24px 32px; }
-  .too-small-mark, .too-small-mark svg { width: 56px; height: 56px; }
-  .too-small h1 { font-size: 26px; transform: translateY(-14px); }
-  /* 355px at 11px against 272px at a 320px phone, so it takes two lines
-     here - the alternative was type too small to read */
-  .too-small-line { font-size: 11px; white-space: normal; max-width: 30ch; }
+  .index.is-closed { display: none; }
+  .entries { padding-top: var(--s3); }
+  .card-title h3 { font-size: 22px; line-height: 29px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1953,13 +1771,13 @@ function ProposePanel({ seed, onClose }) {
       <div className="propose-inner">
         <div className="browse-bar">
           <div className="browse-bar-inner">
-            <button className="browse-back" type="button" onClick={onClose}>
+            <button className="browse-back" type="button" onClick={onClose} aria-label="Back">
               <svg viewBox="4 6 16 12" fill="none" aria-hidden="true">
                 <path d="M19 12H5M10 7l-5 5 5 5" stroke="currentColor" strokeWidth="2"
                   strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <span className="browse-name">Back</span>
             </button>
+            <span className="browse-name">Simone</span>
           </div>
         </div>
 
@@ -1975,22 +1793,14 @@ function ProposePanel({ seed, onClose }) {
           </div>
         ) : (
           <>
-            {/* A block, not a line of type on paper: this is the one
-                place the reader is being asked to give something back,
-                so it gets the weight of an answer card. */}
-            <div className="propose-hero">
-              <span className="propose-mark">
-                <MarkGlyph />
-              </span>
+            <div className="browse-head">
               <h2>{editing ? "Suggest an edit" : "Propose a term"}</h2>
               <p>
                 {editing
-                  ? "Say what has changed. I\u2019d rather be corrected than be wrong."
-                  : "I only keep words Frost actually says. Tell me the word and what it means."}
+                  ? "Say what has changed. The person quoted in the entry decides."
+                  : "Words get added when the studio starts using them, not before. This goes to whoever holds the vocabulary this quarter."}
               </p>
             </div>
-
-            <div className="propose-form">
 
             <label className="pf-field">
               <span>The word</span>
@@ -2002,7 +1812,7 @@ function ProposePanel({ seed, onClose }) {
                 placeholder="One or two sentences, the way you would say it out loud." />
             </label>
             <label className="pf-field">
-              <span>In a sentence</span>
+              <span>Heard in the wild</span>
               <textarea rows={2} value={form.example} onChange={set("example")}
                 placeholder="An actual sentence someone said." />
             </label>
@@ -2019,20 +1829,19 @@ function ProposePanel({ seed, onClose }) {
               </label>
             </div>
             <label className="pf-field">
-              <span>Your name</span>
+              <span>You are</span>
               <input value={form.from} onChange={set("from")} placeholder="So someone can come back to you" />
             </label>
 
             <div className="propose-actions">
               <button
-                className="btn btn-solid"
+                className="btn"
                 onClick={submit}
                 disabled={state === "sending" || !form.term.trim() || !form.meaning.trim()}
               >
                 {state === "sending" ? "Sending\u2026" : editing ? "Send the edit" : "Propose it"}
               </button>
               <button className="btn btn-quiet" onClick={onClose}>Cancel</button>
-            </div>
             </div>
           </>
         )}
@@ -2638,10 +2447,6 @@ export default function App() {
     };
   }, [menuOpen]);
 
-  /* Nothing to reset when you are already on Everything, unfiltered and
-     at the top - so the mark stops offering. */
-  const atRest = !query.trim() && filter === "everything" && !lifted;
-
   const toTop = useCallback(() => {
     setQuery("");
     setFilter("everything");
@@ -2771,24 +2576,6 @@ export default function App() {
     <div className={`pf ${lifted ? "is-lifted" : ""}`} ref={rootRef}>
       <style>{CSS}</style>
 
-      {/* Below 1024 the archive is not usable: the index rail, the cards
-          and the illustrations all need the width. Rather than degrade
-          it, say so. */}
-      <div className="too-small">
-        <div className="too-small-inner">
-          <span className="too-small-mark"><MarkGlyph /></span>
-          {/* Two elements, two type styles. It was four of each - a mono
-              eyebrow, a display heading, a body line and a mono note -
-              and the heading and body both said "come back". */}
-          <h1>
-            The Ice Queen<br />doesn&rsquo;t shrink.
-          </h1>
-          <p className="too-small-line">
-            Come back on a wider screen. I&rsquo;m in Figma too, if you&rsquo;d rather ask me there.
-          </p>
-        </div>
-      </div>
-
       {proposing && (
         <ProposePanel
           seed={proposing}
@@ -2808,13 +2595,14 @@ export default function App() {
             className="browse-back"
             type="button"
             onClick={() => setBrowsing(false)}
+            aria-label="Back"
           >
             <svg viewBox="4 6 16 12" fill="none" aria-hidden="true">
               <path d="M19 12H5M10 7l-5 5 5 5" stroke="currentColor" strokeWidth="2"
                 strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span className="browse-name">Back</span>
           </button>
+          <span className="browse-name">Simone</span>
           </div>
         </div>
           <div className="browse-head">
@@ -2923,12 +2711,9 @@ export default function App() {
             ref={mastRow}
           >
           <button
-            className={`mark-head ${traveling ? "is-traveling" : ""} ${
-              atRest ? "is-inert" : ""
-            }`}
+            className={`mark-head ${traveling ? "is-traveling" : ""}`}
             ref={headMark}
-            onClick={atRest ? undefined : toTop}
-            disabled={atRest}
+            onClick={toTop}
             aria-label="Show everything"
           >
             <span className="mark-travel">
@@ -2962,7 +2747,7 @@ export default function App() {
             }}
             onMouseLeave={() => setNaming(false)}
           >
-            Simone<span className="apos">’</span>s <em>Permafrost</em>
+            Simone’s <em>Permafrost</em>
           </h1>
           <span className="title-snow" aria-hidden="true">
             {TITLE_SNOW.map((f, i) => (
@@ -3128,7 +2913,11 @@ export default function App() {
               ))}
             </div>
           ))}
-
+          {groups.length === 0 && (
+            <p className="eyebrow" style={{ padding: "10px 0" }}>
+              Nothing to index
+            </p>
+          )}
         </nav>
 
         <main className="entries" ref={entriesRef}>
@@ -3142,7 +2931,7 @@ export default function App() {
                     className="act act-quiet"
                     onClick={() => { setQuery(""); setFilter("everything"); }}
                   >
-                    All terms
+                    Show all terms
                   </button>
                   <button
                     className="act"
@@ -3409,7 +3198,7 @@ function EmptyState({ query, filter, onPick, onReset, onPropose }) {
         </div>
         <div className="empty-cta">
           <button className="act act-quiet" onClick={onReset}>
-            All terms
+            Show all terms
           </button>
           <button className="act" onClick={() => onPropose(query.trim())}>
             Propose it
