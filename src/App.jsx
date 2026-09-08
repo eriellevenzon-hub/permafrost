@@ -478,8 +478,9 @@ html { scroll-behavior: smooth; }
 
 .masthead {
   text-align: center;
-  /* the gap under the title, down to the search row */
-  padding: 60px 0 32px;
+  /* 84, not 60: the mark starts further down the page. The gap under
+     the title, to the search row, is unchanged. */
+  padding: 72px 0 32px;
   /* drifts up and fades as the page moves under the bar */
   transform: translate3d(0, calc(var(--sy) * -0.16px), 0);
   opacity: var(--mast-o, 1);
@@ -841,7 +842,7 @@ html { scroll-behavior: smooth; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: 36px;
 }
 .title-wrap .wordmark { margin: 0; }
 
@@ -2650,6 +2651,26 @@ export default function App() {
   }, []);
 
   /* -- open at the hash ------------------------------------ */
+
+  /* The plugin links here rather than to a form, so the panel needs an
+     address: #/propose, and #/propose/<slug> for an edit to a term. */
+  useEffect(() => {
+    const openPropose = () => {
+      const m = window.location.hash.match(/^#\/propose(?:\/([a-z0-9-]+))?$/);
+      if (!m) return false;
+      const slug = m[1];
+      const entry = slug && BY_SLUG.get(slug);
+      setProposing(
+        entry
+          ? { kind: "edit", term: entry.term, slug: entry.slug }
+          : { kind: "new" }
+      );
+      return true;
+    };
+    if (openPropose()) return;
+    window.addEventListener("hashchange", openPropose);
+    return () => window.removeEventListener("hashchange", openPropose);
+  }, []);
 
   useEffect(() => {
     const slug = slugFromHash();
